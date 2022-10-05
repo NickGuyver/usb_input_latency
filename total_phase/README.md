@@ -1,5 +1,5 @@
 Results for devices I've tested are below (https://github.com/NickGuyver/usb_input_latency/tree/main/total_phase/results):
-  - Microsoft XBOX Series: https://github.com/NickGuyver/usb_input_latency/tree/main/total_phase/results/045e0b12/20221004/165937
+ - Microsoft XBOX Series: https://github.com/NickGuyver/usb_input_latency/tree/main/total_phase/results/045e0b12/20221004/165937
    - Avg: 5ms
  - Microsoft XBOX One: https://github.com/NickGuyver/usb_input_latency/tree/main/total_phase/results/045e02ea/20221004/162911
    - Avg: 7ms
