@@ -1,0 +1,17 @@
+Device ID - 0079:0122
+Manufacturer - ZhiXu
+Product - GuliKit Controller D
+Version - 1.09
+Serial - 
+Trigger Button Position: 8
+Trigger Button Value: 02
+Trigger Button Packet Length: 11
+Trigger Button Name: R
+
+Triggers sent - 1000 
+
+Results:
+	Minimum - 12.133634 ms
+	Maximum - 772.287717 ms
+	Average - 37.04567779158317 ms
+	Sample Standard Deviation - 63.55893646880584 ms

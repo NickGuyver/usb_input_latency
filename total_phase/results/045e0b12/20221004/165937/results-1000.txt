@@ -1,0 +1,17 @@
+Device ID - 045e:0b12
+Manufacturer - Microsoft
+Product - Controller
+Version - 5.09
+Serial - 3039373030303739393933323132
+Trigger Button Position: 7
+Trigger Button Value: 20
+Trigger Button Packet Length: 51
+Trigger Button Name: RB
+
+Triggers sent - 1000 
+
+Results:
+	Minimum - 1.451184 ms
+	Maximum - 10.487116 ms
+	Average - 5.504124062034739 ms
+	Sample Standard Deviation - 2.2455031977956175 ms

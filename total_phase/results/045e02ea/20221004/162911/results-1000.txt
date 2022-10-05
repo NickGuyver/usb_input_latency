@@ -1,0 +1,17 @@
+Device ID - 045e:02ea
+Manufacturer - Microsoft
+Product - Controller
+Version - 4.08
+Serial - 3032363230303034303032373037
+Trigger Button Position: 7
+Trigger Button Value: 10
+Trigger Button Packet Length: 21
+Trigger Button Name: LB
+
+Triggers sent - 1000 
+
+Results:
+	Minimum - 1.354916 ms
+	Maximum - 12.770317 ms
+	Average - 7.127129163484486 ms
+	Sample Standard Deviation - 2.51073724848394 ms

@@ -1,0 +1,17 @@
+Device ID - 1235:ab12
+Manufacturer - NES30
+Product - NES30 Joystick
+Version - 0.01
+Serial - 
+Trigger Button Position: 7
+Trigger Button Value: 04
+Trigger Button Packet Length: 10
+Trigger Button Name: L
+
+Triggers sent - 1000 
+
+Results:
+	Minimum - 0.160733 ms
+	Maximum - 32.10115 ms
+	Average - 15.751424590909092 ms
+	Sample Standard Deviation - 9.167431566397354 ms
