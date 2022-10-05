@@ -7,6 +7,14 @@ There are a lot of other projects that aim to measure input latency in various w
  - Ensure the process is consistent and repeatable
  - Only measure input device latency
 
+The current testing setup uses a Raspberry Pi 4 Model B and Total Phase Beagle USB 480. These were chosen for the first build because it would be the simplest to get started and still meet the most important goals. The full description of how the testing setup works is here - https://github.com/NickGuyver/usb_input_latency/tree/main/total_phase
+
+ - Total Phase provides a Python API with Linux compatibility
+ - Beagle USB 480 has accuracy down to 16.7ns
+ - FPGA supply chain issues with the open source USB analyzers
+ - Raspberry Pi is the only SBC I could find where you could simultaneously pull multiple pins and it runs Linux, so it would easily work with the Beagle
+ - pigpio library is used to pull the Beagle trigger and USB device inputs simultaneously (https://abyz.me.uk/rpi/pigpio/python.html)
+
 In order to more easily define how the measurements in my method differ from others, I have listed the entire input process in a bulleted format to show where each method performs its measurements.
 
  - 1 physically pushing the button
@@ -39,7 +47,7 @@ https://www.youtube.com/watch?v=_MaeJbd1xaM&list=PLfOoCUS0PSkVFeagm9C4qjMl0mtiko
 https://docs.google.com/spreadsheets/d/1KlRObr3Be4zLch7Zyqg6qCJzGuhyGmXaOIUrpfncXIM/edit#gid=1214855193
  - Steps 4-8
  - This adds in latency for the endpoint to process the USB data by the host computer.
- - Alters the host to force a 1 millisecond polling rate which would have inconsistent results with input devices. Some devices may behave differently when polled more frequently than they were designed. There is potential to give advantage to devices which were programmed with a slower bInterval, so they would be faster on a MisTER but slower on anything else.
+ - Alters the host to force a 1 millisecond polling rate which would have inconsistent results with input devices. Some devices may behave differently when polled more frequently than they were designed. There is potential to give advantage to devices which were programmed with a slower bInterval, so they would be faster on a MisTER but slower on anything else. See my NES30 results (15.75ms) compared to the MiSTer (0.870ms) for an example (https://github.com/NickGuyver/usb_input_latency/blob/main/total_phase/results/1235ab12/20221004/164441/results-1000.txt). At this time I don't understand how MiSTer results can be faster, but I am currently trying to figure that out.
 
 https://danluu.com/keyboard-latency/
  - Steps 1-7
@@ -69,46 +77,5 @@ My method:
  - Steps 4-7
  - The quality, condition, and build style of the 3 USB cables needed in the testing method could impact measurements.
  - There could be a difference in the latency between different inputs within a single device. For example, triggers on a gaming controller versus the buttons, or the movement of a mouse versus the buttons. Depending on the scanning method of a keyboard, I could choose a key that is read faster or slower than others.
+ - I am only able to test USB 2.0 and below. The Beagle 5000, which supports USB 3.0, is too expensive. However, of all the devices I've tested none have proven too fast for reading. Including my SNES-USB adapter (https://github.com/NickGuyver/snes_usb-adapter) which is significantly faster than anything else I've tested and still only USB 2.0.
 
-Description of current method using (link to snes adapter github) as an example:
-Testing list:
- - T41: Teensy 4.1 (link to .ino)
- - GP: Modified SNES gamepad (headered wire soldered to right trigger button)
- - T40: SNES to USB adapter (Teensy 4.0, link to .ino)
- - B480: Beagle 480
- - TPDC: Total Phase Data Center (.csv output, link to .csv)
- - PY: .csv parser for Data Center output (Python, link to .py)
- 
-Connections:
- - T41 pin 32 connected to GP
- - T41 pin 31 connected to B480 INT1 trigger
- - GP connected to T40 over SNES cable
- - T40 connected to target port on B480
- - Host connected to host port on B480
- - Analysis host running TDPC, connected to analysis port on B480
- 
-How it works:
- - 1 T41 alternates pulling pins 32 and 33, simultaneously, high/low randomly between 400 and 1000 milliseconds.
- - 2 TPDC adds the trigger in from step 1 into the capture interface
- - 3 TDPC adds the USB data IN packet from the controller into the capture interface
- - 4 This is done >1000 times for a large sample size
- - 5 Export the TPDC collected data into a .csv
- - 6 Load the .csv into PY
- - 7 Review PY output for summarized results
- 
-Notes on testing:
- - 1 400 milliseconds was chosen as the random floor because it was twice the slowest measured latency from the MisTER input latency sheet, nothing should be slower. If you believe your device may be slower than you should increase the random floor, but it will make testing much slower.
- - 1 The pins are pulled simultaneously by leveraging pin registers.
- - 6 The parsing script needs some work. With the XB1 controller I tested, there were a lot of extra IN packets, so I came up with a rough method of trying to only count the correct data.
- 
-Future goals:
- - Improve button filtering in script, which will be passed on to future improvements
- - Create workflows for open source USB analyzers
-   - PhyWhisperer-USB
-   - LUNA
-   - OpenVizsla
- - Create a simpler setup
-   - Leverage USB host on T41 to control and retrieve data from USB analyzers, as if it were an analysis computer.
-   - Reprogram open source USB analyzers to remove need for analysis hosts entirely
- - Create an enclosure for measuring wireless dongles
- - Test various USB cable styles from several manufacturers to determine if there is an impact on latency
