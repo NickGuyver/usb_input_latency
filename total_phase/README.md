@@ -29,6 +29,9 @@ How it works:
  - 2 While sending triggers in the background, PY starts the B480
  - 3 B480 collects raw USB packets and sends them to the RPi running PY which reads them in
  - 4 PY does a lot of things to streamline the testing process, see the example run below
+   - 1 Collect the USB device details with lsusb
+   - 2 Runs 10 test triggers and tries to figure out what good data packets look like, then saves the "on" data packet details
+   - 3 Runs some number of tests, filtering out data packets that are out of order or do not match the previously determined good packets
  - 5 After running the test, all data, including raw packet collection is dumped into a directory. This allows others to validate that the results provided by PY are true and accurate.
  
 Notes on testing:
