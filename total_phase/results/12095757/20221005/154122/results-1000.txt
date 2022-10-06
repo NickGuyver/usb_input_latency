@@ -1,0 +1,17 @@
+Device ID - 1209:5757
+Manufacturer - NickGuyver
+Product - USB Device
+Version - 2.79
+Serial - 11590290
+Trigger Button Position: 2
+Trigger Button Value: 80
+Trigger Button Packet Length: 15
+Trigger Button Name: RT
+
+Triggers sent - 1000 
+
+Results:
+	Minimum - 0.016033 ms
+	Maximum - 0.155016 ms
+	Average - 0.08671401102204408 ms
+	Sample Standard Deviation - 0.03677839974308105 ms
