@@ -59,7 +59,7 @@ class TestedDevice:
     product = ''
     version = ''
     serial = ''
-    trigger_byte = ''
+    trigger_nibble = ''
     trigger_position = ''
     trigger_length = 0
     trigger_name = ''
@@ -75,6 +75,7 @@ class PacketInfo:
         self.status = 0
         self.events = 0
         self.length = 0
+
 
 # Used to store the packets that are saved during the collapsing
 # process.  The tail of the queue is always used to store
@@ -109,6 +110,7 @@ class PacketQueue:
             pkts.append(self.pkt[self._head])
             self._head = (self._head + 1) % QUEUE_SIZE
         return pkts
+
 
 class CollapseInfo:
     def __init__(self):
@@ -322,6 +324,7 @@ def usb_print_data_packet(packet, length):
 
     return packetstring
 
+
 # Print common packet header information
 #BG_USB_PID_IN = 0x69
 #BG_USB_PID_DATA0 = 0xc3
@@ -353,6 +356,7 @@ def usb_print_packet(packet, error_status, find_caller):
         return f'{packet.time_sop_ns},{packet.length},{packet_data}'
     
     sys.stdout.flush()
+
 
 # Dump saved summary information
 def usb_print_summary_packet(packet_number, collapse_info, signal_errors):
@@ -425,6 +429,7 @@ def usb_print_summary_packet(packet_number, collapse_info, signal_errors):
     
     return packet_number, 0
 
+
 # Outputs any packets saved during the collapsing process
 def output_saved(packetnum, signal_errors, collapse_info, pkt_q, find_caller):
     (packetnum, signal_errors) = \
@@ -437,6 +442,7 @@ def output_saved(packetnum, signal_errors, collapse_info, pkt_q, find_caller):
         usb_print_packet(pkt, 0, find_caller)
 
     return packetnum, signal_errors
+
 
 # Collapses a group of packets.  This involves incrementing the group
 # counter and clearing the queue. If this is the first group to
@@ -452,6 +458,7 @@ def collapse(group, collapse_info, pkt_q):
             collapse_info.time_sop = pkt_q.tail.time_sop
 
     pkt_q.clear()
+
 
 # The main packet dump routine
 def usb_dump(num_packets):
@@ -718,23 +725,31 @@ def find_button(packet_data_off, data_off_matches, packet_data_on, data_on_match
             # Check if there is a difference between the lists
             if packet_data_off[0][i] != packet_data_on[0][i]:
                 # Find where byte gets cleared out
-                if (packet_data_off[0][i] == '00') or (packet_data_on[0][i] == '00'):
+                if (packet_data_off[0][i] == '0') or (packet_data_on[0][i] == '0'):
                     button_change.append(i)
     
     # Check for errors
-    # Sometimes more than one byte changes during a trigger
+    # Sometimes more than one nibble changes during a trigger
     if len(button_change) > 1:
-        print('Multiple triggered bytes found')
-        print('Chose the correct triggered byte position:\n')
+        print('Multiple triggered nibbles found')
+        print('Chose the correct triggered nibble position:\n')
         
-        # List out all the possible trigger byte choices
+        # List out all the possible trigger nibble choices
         for i in range(0, len(button_change)):
             # Check if the DATA packets make sense
             if packet_data_on[0][button_change[i]] >= packet_data_off[0][button_change[i]]:
                 print(f'{i+1} - 0x{packet_data_on[0][button_change[i]]} at position {button_change[i] + 1}')
+                data_front = ''.join(packet_data_on[0][:button_change[i]])
+                # Removed end of packet as it seems less readable
+                #data_end = ''.join(packet_data_on[0][button_change[i + 1]:])
+                print(f'Example: {data_front}<{packet_data_on[0][button_change[i]]}>\n')
                 
             else:
                 print(f'{i+1} - 0x{packet_data_off[0][button_change[i]]} at position {button_change[i] + 1}')
+                data_front = ''.join(packet_data_off[0][:button_change[i]])
+                # Removed end of packet as it seems less readable
+                #data_end = ''.join(packet_data_off[0][button_change[i + 1]:])
+                print(f'Example: {data_front}<{packet_data_off[0][button_change[i]]}>\n')
             
         print('')
         choice = int(input('Enter Choice #'))
@@ -754,18 +769,18 @@ def find_matches(packet_data_in):
     import random
     
     packet_data = packet_data_in
-    data0_test_list = []
+    data_test_list = []
     test_tracker = []
-
+    
     # Create a new shuffled list for comparing data points
     shuffled_data = packet_data.copy()
     random.shuffle(shuffled_data)
 
     for i in range(0, len(packet_data[0])):
-        data0_test_list.append(None)
+        data_test_list.append(None)
         test_tracker.append(False)
 
-    # Search for matches between the normal bytes and shuffled to discover bytes that do not change
+    # Search for matches between the normal nibbles and shuffled to discover nibbles that do not change
     for i in range(0, len(packet_data)):
         for x in range(0, len(packet_data[i])):
             # Check for mismatched data packets that were collected
@@ -774,7 +789,7 @@ def find_matches(packet_data_in):
             
             elif (i == 0) or (test_tracker[x]):
                 if packet_data[i][x] == shuffled_data[i][x]:
-                    data0_test_list[x] = packet_data[i][x]
+                    data_test_list[x] = packet_data[i][x]
                     test_tracker[x] = True
     
     return test_tracker
@@ -851,16 +866,18 @@ def clean_data_packets(packets):
         elif packet_type.startswith('DATA') and (not first_run):
             # Drop off data packets that are not the right length
             byte_data = split_line[3].strip('\n').split(' ')[:-1]
+            # Save off data packet into a no whitespace string for nibble testing
+            byte_string = [i for i in split_line[3].replace(' ', '')]
             
             if TestedDevice.trigger_length == len(byte_data):
                 if clean_input[-1].split(',')[1] == 'TRIGGER_OFF':
-                    packet_data_off.append(byte_data)
+                    packet_data_off.append(byte_string)
                     data_off_test = True
                     data_on_test = False
                     clean_input.append(f'{split_line[0]},{split_line[2]},{split_line[3]}')
                     
                 elif clean_input[-1].split(',')[1] == 'TRIGGER_ON':
-                    packet_data_on.append(byte_data)
+                    packet_data_on.append(byte_string)
                     data_off_test = False
                     data_on_test = True
                     clean_input.append(f'{split_line[0]},{split_line[2]},{split_line[3]}')
@@ -892,12 +909,20 @@ def find_trigger():
     data_on_trigger = hex(int(packet_data_on[0][TestedDevice.trigger_position - 1], 16))
     
     if data_on_trigger >= data_off_trigger:
-        byte_val = packet_data_on[0][TestedDevice.trigger_position - 1]
+        nibble_value = packet_data_on[0][TestedDevice.trigger_position - 1]
+        data_front = ''.join(packet_data_on[0][:TestedDevice.trigger_position])
+        data_end = ''.join(packet_data_on[0][TestedDevice.trigger_position:])
+        print('\nTrigger found.')
+        print(f'Example: {data_front}<{packet_data_on[0][TestedDevice.trigger_position]}>{data_end}\n')
     
     else:
-        byte_val = packet_data_off[0][TestedDevice.trigger_position - 1]
+        nibble_value = packet_data_off[0][TestedDevice.trigger_position - 1]
+        data_front = ''.join(packet_data_off[0][:TestedDevice.trigger_position - 1])
+        data_end = ''.join(packet_data_off[0][TestedDevice.trigger_position:])
+        print('\nTrigger found.')
+        print(f'Example: {data_front}<{packet_data_off[0][TestedDevice.trigger_position - 1]}>{data_end}\n')
 
-    TestedDevice.trigger_byte = byte_val
+    TestedDevice.trigger_nibble = nibble_value
 
 
 # Function for handling latency testing
@@ -960,18 +985,20 @@ def latency_test(test_count):
         # Watch for trigger packets with no matching data packet
         elif packet_type.startswith('DATA') and (not first_run):
             byte_data = split_line[3].strip('\n').split(' ')[:-1]
+            # Save off data packet into a no whitespace string for nibble testing
+            byte_string = [i for i in split_line[3].replace(' ', '')]
             
             # Drop off data packets that are not the right length
             if TestedDevice.trigger_length == len(byte_data):
                 # Make sure we only collect valid packets and times
-                if ('00' == byte_data[trigger_position]) and clean_input[-1].split(',')[1] == 'TRIGGER_OFF':
+                if ('0' == byte_string[trigger_position]) and clean_input[-1].split(',')[1] == 'TRIGGER_OFF':
                     packet_data_off.append(byte_data)
                     data_off_test = True
                     data_on_test = False
                     time_keeper.append(line_time)
                     clean_input.append(f'{split_line[0]},{split_line[2]},{split_line[3]}')
                 
-                elif (TestedDevice.trigger_byte == byte_data[trigger_position]) \
+                elif (TestedDevice.trigger_nibble == byte_string[trigger_position]) \
                         and clean_input[-1].split(',')[1] == 'TRIGGER_ON':
                     packet_data_on.append(byte_data)
                     data_off_test = False
@@ -1018,7 +1045,7 @@ def latency_test(test_count):
         out_file.write(f'Version - {TestedDevice.version}\n')
         out_file.write(f'Serial - {TestedDevice.serial}\n')
         out_file.write(f'Trigger Button Position: {TestedDevice.trigger_position}\n')
-        out_file.write(f'Trigger Button Value: {TestedDevice.trigger_byte}\n')
+        out_file.write(f'Trigger Button Value: {TestedDevice.trigger_nibble}\n')
         out_file.write(f'Trigger Button Packet Length: {TestedDevice.trigger_length}\n')
         out_file.write(f'Trigger Button Name: {TestedDevice.trigger_name}\n')
         out_file.write('\n')
@@ -1167,7 +1194,7 @@ def test_button():
         print(f'Version - {TestedDevice.version}')
         print(f'Serial - {TestedDevice.serial}')
         print(f'Trigger Button Position: {TestedDevice.trigger_position}')
-        print(f'Trigger Button Value: {TestedDevice.trigger_byte}')
+        print(f'Trigger Button Value: {TestedDevice.trigger_nibble}')
         print(f'Trigger Button Packet Length: {TestedDevice.trigger_length}')
         print(f'Trigger Button Name: {TestedDevice.trigger_name}')
         print('')
@@ -1181,8 +1208,8 @@ def test_button():
         choice = input('Enter Choice #')
         
         if choice == '1':
-            TestedDevice.trigger_position = input('Enter Trigger Button Position (count from 1): ')
-            TestedDevice.trigger_byte = input('Enter Trigger Button Value (0x): ')
+            TestedDevice.trigger_position = input('Enter Trigger Button Position (count from 1 by nibbles): ')
+            TestedDevice.trigger_nibble = input('Enter Trigger Button Value (0x): ')
             TestedDevice.trigger_length = int(input('Enter Trigger Button Packet Length (count from 1): '))
             TestedDevice.trigger_name = input('Enter Trigger Button Name (eg., A, B, X,...): ')
             
@@ -1204,7 +1231,7 @@ def test_latency():
         print('-----Test Latency Menu-----')
         print('===========================')
         print(f'Trigger Button Position: {TestedDevice.trigger_position}')
-        print(f'Trigger Button Value: {TestedDevice.trigger_byte}')
+        print(f'Trigger Button Value: {TestedDevice.trigger_nibble}')
         print(f'Trigger Button Packet Length: {TestedDevice.trigger_length}')
         print('')
         print('1 - Run 25 Tests (~18s)')
@@ -1262,7 +1289,7 @@ def main_menu():
         test_button()
     elif choice == '4':
         # Without trigger details the testing would be inaccurate
-        if ('' in (TestedDevice.trigger_position, TestedDevice.trigger_byte)) or (TestedDevice.trigger_length == 0):
+        if ('' in (TestedDevice.trigger_position, TestedDevice.trigger_nibble)) or (TestedDevice.trigger_length == 0):
             print('\nMissing trigger details, run "Test Button" first.\n')
             main_menu()
         else:
