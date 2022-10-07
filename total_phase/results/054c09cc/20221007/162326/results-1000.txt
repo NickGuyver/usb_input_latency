@@ -1,0 +1,17 @@
+Device ID - 054c:09cc
+Manufacturer - Sony Interactive Entertainment
+Product - Wireless Controller
+Version - 1.00
+Serial - 
+Trigger Button Position: 13
+Trigger Button Value: 2
+Trigger Button Packet Length: 67
+Trigger Button Name: X
+
+Triggers sent - 1000 
+
+Results:
+	Minimum - 1.942233 ms
+	Maximum - 11.756816 ms
+	Average - 9.723222368368369 ms
+	Sample Standard Deviation - 1.20229136662416 ms
