@@ -3,6 +3,8 @@ Results for devices I've tested are below (https://github.com/NickGuyver/usb_inp
    - Avg: 5ms
  - Microsoft XBOX One: https://github.com/NickGuyver/usb_input_latency/tree/main/total_phase/results/045e02ea/20221004/162911
    - Avg: 7ms
+ - SCUF Infinity 4PS PRO: https://github.com/NickGuyver/usb_input_latency/blob/main/total_phase/results/054c09cc/20221007/162326/results-1000.txt
+   - Avg: 9ms
  - 8Bitdo NES30: https://github.com/NickGuyver/usb_input_latency/tree/main/total_phase/results/1235ab12/20221004/164441
    - Avg: 15ms
  - GuliKit KingKong 2 Pro: https://github.com/NickGuyver/usb_input_latency/tree/main/total_phase/results/00790122/20221004/160350
