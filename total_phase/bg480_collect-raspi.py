@@ -694,6 +694,7 @@ def usb_dump(num_packets):
     trigger_process.terminate()
     bg_disable(beagle)
     bg_close(beagle)
+    trigger_adjust(True)
     
     print('\nDone. Stopping triggers and collection.\n')
     
@@ -1058,7 +1059,7 @@ def latency_test(test_count):
         out_file.write(f'\tSample Standard Deviation - {stdev(clean_times)/1000000} ms\n')
 
 
-# Function for pulling the Raspberry Pi pins simultaneously, leveraging pigpiod
+# Function for pulling the Raspberry Pi pins during latency tests and automatic button search
 def trigger_on():
     
     import pigpio
@@ -1087,6 +1088,36 @@ def trigger_on():
         test = randrange(min_delay, max_delay)
         time.sleep(test / 1000)
         pi.clear_bank_1((1 << first_pin) | (1 << second_pin))
+        
+        
+# Function for pulling the Raspberry Pi pins as needed
+def trigger_adjust(trigger_set):
+    
+    import inspect
+    import pigpio
+    
+    # GPIO on the Raspberry Pi
+    first_pin = 20
+    second_pin = 21
+
+    pi = pigpio.pi()
+    
+    # Change pins as needed for your testing setup
+    pi.set_mode(first_pin, pigpio.OUTPUT)
+    pi.set_mode(second_pin, pigpio.OUTPUT)
+    
+    # Pull pins high/low as requested
+    if trigger_set:
+        pi.set_bank_1((1 << first_pin) | (1 << second_pin))
+        
+        if 'usb_dump' not in inspect.stack()[1][3]:
+            print(f'\nPins {first_pin} and {second_pin} set High/Off.')
+            
+    else:
+        pi.clear_bank_1((1 << first_pin) | (1 << second_pin))
+        
+        if 'usb_dump' not in inspect.stack()[1][3]:
+            print(f'\nPins {first_pin} and {second_pin} set Low/On.')
 
 
 #=========================================================================
@@ -1200,9 +1231,10 @@ def test_button():
         print('')
         print('1 - Manually Enter Trigger Button Details')
         print('2 - Automatically Find Trigger Button Details')
-        #print('3 - Pulse Trigger Button')
-        #print('4 - Pull Trigger Button')
-        print('3 - Return to Main Menu')
+        print('3 - Pull Trigger Button High/Off')
+        print('4 - Pull Trigger Button Low/On')
+        print('5 - Return to Main Menu')
+        #print('X - Pulse Trigger Button')
         print('==========================')
         print('')
         choice = input('Enter Choice #')
@@ -1220,6 +1252,12 @@ def test_button():
             find_trigger()
             
         elif choice == '3':
+            trigger_adjust(True)
+            
+        elif choice == '4':
+            trigger_adjust(False)
+            
+        elif choice == '5':
             print('\n\n')
             main_menu()
             
